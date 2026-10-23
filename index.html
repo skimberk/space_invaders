@@ -40,6 +40,12 @@
         // Keep track of what's being pressed
         let keyLeft = false;
         let keyRight = false;
+        let keySpace = false;
+
+        let existsBullet = false;
+        let bulletX = 0;
+        let bulletY = 0;
+        let bulletSize = 10;
 
         // Player state/configs
         let playerPos = width / 2;
@@ -60,15 +66,34 @@
         let enemyXOffset = (numEnemiesX * (enemySize + enemySpacing) - enemySpacing) / 2;
         let enemyYOffset = (numEnemiesY * (enemySize + enemySpacing) - enemySpacing) / 2;
 
+        let score = 0;
+
+        let enemyAlive = [];
+        for (let i = 0; i < numEnemiesX; i++) {
+            let row = [];
+            for (let j = 0; j < numEnemiesY; j++) {
+                row.push(true);
+            }
+            enemyAlive.push(row);
+        }
+
         // Here they come >:( >:( >:( >:)
         let drawEnemies = function() {
             for (let i = 0; i < numEnemiesX; i++) {
                 for (let j = 0; j < numEnemiesY; j++) {
-                    let x = enemyPos - enemyXOffset + i * (enemySize + enemySpacing);
-                    let y = enemyDown + j * (enemySize + enemySpacing);
+                    if (enemyAlive[i][j]) {
+                        let x = enemyPos - enemyXOffset + i * (enemySize + enemySpacing);
+                        let y = enemyDown + j * (enemySize + enemySpacing);
 
-                    ctx.fillStyle = "#0f0";
-                    ctx.fillRect(x, y, enemySize, enemySize);
+                        ctx.fillStyle = "#0f0";
+                        ctx.fillRect(x, y, enemySize, enemySize);
+
+                        if (existsBullet && bulletX <= x + enemySize && bulletX >= x - enemySize && bulletY <= y + enemySize && bulletY >= y - enemySize) {
+                            existsBullet = false;
+                            enemyAlive[i][j] = false;
+                            score += 1;
+                        }
+                    }
                 }
             }
         };
@@ -111,6 +136,27 @@
                 enemyMoveRight = true;
             }
 
+            if (keySpace && !existsBullet) {
+                existsBullet = true;
+                bulletX = playerPos;
+                bulletY = playerDown;
+            }
+
+            if (existsBullet) {
+                bulletY -= 8;
+
+                ctx.fillStyle = "#f00";
+                ctx.fillRect(bulletX - bulletSize / 2, bulletY - bulletSize / 2, bulletSize, bulletSize);
+
+                if (bulletY < 0) {
+                    existsBullet = false;
+                }
+            }
+
+            ctx.font = "30px 'Comic Sans MS'";
+            ctx.fillStyle = "#0f0";
+            ctx.fillText("Score: " + score, 10, 30);
+
             // requestAnimationFrame does 60fps, this should do ~30fps, maybe.
             // I was debating using setInterval but...requestAnimationFrame is supposed to
             // be friendlier to the browser?
@@ -133,6 +179,9 @@
             } else if (e.code === "ArrowRight") {
                 e.preventDefault();
                 keyRight = true;
+            } else if (e.code === "Space") {
+                e.preventDefault();
+                keySpace = true;
             }
         });
 
@@ -144,6 +193,9 @@
             } else if (e.code === "ArrowRight") {
                 e.preventDefault();
                 keyRight = false;
+            } else if (e.code === "Space") {
+                e.preventDefault();
+                keySpace = false;
             }
         });
     })();
