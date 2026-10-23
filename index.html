@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RC Space Invaders</title>
+
+    <style>
+        body {
+            background: #000;
+        }
+        h2 {
+            color: #ff66bb;
+            text-align: center;
+            font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Comic Neue", cursive;
+        }
+        #canvas {
+            display: block;
+            margin: 0 auto;
+            background-color: #000;
+            border: 2px solid #fff;
+        }
+    </style>
+</head>
+<body>
+    <h2>RC Space Invaders</h2>
+    <canvas id="canvas"></canvas>
+
+    <script>
+    (function() {
+        let canvas = document.getElementById("canvas");
+        let ctx = canvas.getContext("2d");
+
+        let height = 500;
+        let width = 500;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // Keep track of what's being pressed
+        let keyLeft = false;
+        let keyRight = false;
+
+        // Player state/configs
+        let playerPos = width / 2;
+        let playerBound = 30;
+        let playerSize = 40;
+        let playerDown = 470;
+
+        // Enemy state/configs
+        let enemyPos = width / 2;
+        let enemyDown = 50;
+        let enemySize = 20;
+        let enemySpacing = 30;
+        let numEnemiesX = 6;
+        let numEnemiesY = 5;
+        let enemyMoveRight = true;
+
+        // Offset to draw enemies centered on enemyPos
+        let enemyXOffset = (numEnemiesX * (enemySize + enemySpacing) - enemySpacing) / 2;
+        let enemyYOffset = (numEnemiesY * (enemySize + enemySpacing) - enemySpacing) / 2;
+
+        // Here they come >:( >:( >:( >:)
+        let drawEnemies = function() {
+            for (let i = 0; i < numEnemiesX; i++) {
+                for (let j = 0; j < numEnemiesY; j++) {
+                    let x = enemyPos - enemyXOffset + i * (enemySize + enemySpacing);
+                    let y = enemyDown + j * (enemySize + enemySpacing);
+
+                    ctx.fillStyle = "#0f0";
+                    ctx.fillRect(x, y, enemySize, enemySize);
+                }
+            }
+        };
+
+        let animate = function() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw player
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(playerPos - playerSize / 2, playerDown, playerSize, 10);
+            ctx.fillRect(playerPos - 5, playerDown - 10, 10, 10);
+
+            // Move player when pressing one arrow key (not both!)
+            if (keyLeft && !keyRight) {
+                playerPos -= 3;
+                // Check bounds
+                if (playerPos < playerBound) {
+                    playerPos = playerBound;
+                }
+            } else if (keyRight && !keyLeft) {
+                playerPos += 3;
+                if (playerPos > width - playerBound) {
+                    playerPos = width - playerBound;
+                }
+            }
+
+            drawEnemies();
+
+            // Move the enemies!
+            if (enemyMoveRight) {
+                enemyPos += 0.5;
+            } else {
+                enemyPos -= 0.5;
+            }
+
+            // Move them the other way when they reach the edge of the screen!
+            if (enemyPos + enemyXOffset >= width) {
+                enemyMoveRight = false;
+            } else if (enemyPos - enemyXOffset <= 0) {
+                enemyMoveRight = true;
+            }
+
+            // requestAnimationFrame does 60fps, this should do ~30fps, maybe.
+            // I was debating using setInterval but...requestAnimationFrame is supposed to
+            // be friendlier to the browser?
+            setTimeout(function() {
+                requestAnimationFrame(animate);
+            }, 16);
+        };
+
+        // Start the animation!
+        requestAnimationFrame(animate);
+
+        // Move when key is down
+        document.addEventListener("keydown", function(e) {
+            if (e.code === "ArrowLeft") {
+                // Previously had this for all key downs but it was preventing me from
+                // refreshing with cmd+R, which was confusing
+                // Honestly I probably don't need it
+                e.preventDefault();
+                keyLeft = true;
+            } else if (e.code === "ArrowRight") {
+                e.preventDefault();
+                keyRight = true;
+            }
+        });
+
+        // Stop when key moves up
+        document.addEventListener("keyup", function(e) {
+            if (e.code === "ArrowLeft") {
+                e.preventDefault();
+                keyLeft = false;
+            } else if (e.code === "ArrowRight") {
+                e.preventDefault();
+                keyRight = false;
+            }
+        });
+    })();
+    </script>
+</body>
+</html>
